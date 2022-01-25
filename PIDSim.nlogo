@@ -15,6 +15,18 @@ to-report clamp [number maximum]
   [report number]
 end
 
+to draw-line
+  cro 1 [
+  setxy 0 target-line-ycor
+  set heading 90
+  set color red
+  set pen-size 2
+  pd
+  fd world-width
+  die
+]
+end
+
 to setup
   set position-error 0
   set proportional-move 0
@@ -23,15 +35,7 @@ to setup
 
   set target-line-ycor random 7 - 3
 
-  cro 1 [
-    setxy 0 target-line-ycor
-    set heading 90
-    set color red
-    set pen-size 2
-    pd
-    fd world-width
-    die
-  ]
+  draw-line
 
   create-robots 1 [
     set size 2
@@ -110,7 +114,7 @@ INPUTBOX
 230
 374
 p-value
-6.0
+5.0
 1
 0
 Number
