@@ -1,35 +1,24 @@
-globals [
-  target-line-ycor
-  position-error
-  proportional-move
-  robot-ycor
-  total-error
-]
+globals [target-line-ycor]
 
 breed [robots robot]
+robots-own [position-error]
 
-; math functions
-to-report clamp [number maximum]
-  ifelse number > maximum
-  [report maximum]
-  [report number]
-end
-
+; Observer context
+; Draw a red line through the world, at a selected ycor
 to draw-line
   cro 1 [
-  setxy 0 target-line-ycor
-  set heading 90
-  set color red
-  set pen-size 2
-  pd
-  fd world-width
-  die
-]
+    setxy 0 target-line-ycor
+    set heading 90
+    set color red
+    set pen-size 2
+    pd
+    fd world-width
+    die
+  ]
 end
 
+; Observer context
 to setup
-  set position-error 0
-  set proportional-move 0
   ca
   ask patches [set pcolor yellow + 3]
 
@@ -37,9 +26,10 @@ to setup
 
   draw-line
 
-  create-robots 1 [
+  ; Create the robot, facing towards the right, at a random ycor
+  create-robots num-of-robots [
     set size 2
-    set shape "car"
+;    set shape "car"
     set heading 90
     setxy min-pxcor + 2 random-ycor
     set pen-size 2
@@ -47,20 +37,34 @@ to setup
   ]
 end
 
+; Observer context
 to go
   ask robots [
-    set robot-ycor ycor
-    move-pid
-    wait 0.01
+    move
   ]
+  wait 0.01
 end
 
-to move-pid
-  set position-error distancexy xcor target-line-ycor
-  set proportional-move p-value * position-error
+; Turtle context
+; Move the robot using PID values (currently only uses P and D value)
+to move
+  ; calculate the change in error (derivative) using the
+  ; previous error and current error, then multiply that by the proportional gain
+  let current-error distancexy xcor target-line-ycor
+  ; Divided by 1, because the change in time should be around 1 tick (or 0.01 second?)
+  let derivative-move (current-error - position-error) / 1 * kP
+  set position-error current-error
+
+  let proportional-move kP * position-error
+
+  ; add integral-move
+  let pid-move proportional-move + derivative-move
+
   ifelse ycor > target-line-ycor
-  [set heading proportional-move + 90]
-  [set heading (- proportional-move) + 90]
+  ; add 90 to pid-move to account for the robot facing right
+  [set heading pid-move + 90]
+  ; negate to rotate the opposite direction if below the target
+  [set heading (- pid-move) + 90]
   fd 0.5
 end
 @#$#@#$#@
@@ -73,7 +77,7 @@ GRAPHICS-WINDOW
 -1
 13.0
 1
-10
+15
 1
 1
 1
@@ -113,8 +117,8 @@ INPUTBOX
 314
 230
 374
-p-value
-5.0
+kP
+6.0
 1
 0
 Number
@@ -136,49 +140,20 @@ NIL
 NIL
 1
 
-MONITOR
-238
-313
-371
-358
-NIL
-proportional-move
-3
+SLIDER
+16
+388
+237
+421
+num-of-robots
+num-of-robots
 1
-11
-
-MONITOR
-238
-360
-372
-405
-NIL
-position-error
-3
+100
+1.0
 1
-11
-
-MONITOR
-238
-408
-372
-453
-NIL
-target-line-ycor
-3
 1
-11
-
-MONITOR
-373
-313
-515
-358
-NIL
-robot-ycor
-3
-1
-11
+robot(s)
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
